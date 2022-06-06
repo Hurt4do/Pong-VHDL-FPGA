@@ -1,0 +1,51 @@
+------------Finite_State_Machine_Template----------------
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE IEEE.NUMERIC_STD.ALL;
+------------------------------------------------
+
+ENTITY ball_V2 IS 
+  PORT ( rst          : IN  STD_LOGIC;
+         clk          : IN  STD_LOGIC;
+			BallPosition : OUT INTEGER RANGE 0 TO 127);
+END ENTITY ball_V2;
+------------------------------------------------
+ARCHITECTURE fsm OF ball_V2 IS 
+  TYPE state IS (StateRight, StateLeft);
+  SIGNAL pr_state, nx_state : state;
+  SIGNAL TempPos : INTEGER RANGE 0 TO 127;
+  
+  BEGIN 
+  BallPosition <= TempPos;
+    ----------sequential section: -----------------
+	 PROCESS (rst, clk)
+	   BEGIN
+	     IF (reset = '1')THEN
+		    pr_state <= StateRight;
+		  ELSIF (rising_edge(clk))THEN 
+		    pr_state <= nx_state;
+			END IF;
+	  END PROCESS;
+	 ----------- combinational section: ------------
+	PROCESS (TempPos, pr_state)
+     BEGIN 
+	    CASE pr_state IS 
+		   WHEN StateRight => 
+		     IF ( TempPos < 123 )THEN 
+			    TempPos  := TempPos + 8;
+				 nx_state <= StateRight;
+			  ELSE
+			    nx_state <= StateLeft;
+			  END IF;
+			  
+			WHEN StateLeft =>
+		     IF (TempPos > 3)THEN 
+			    TempPos := TempPos - 8;
+				 nx_state <= StateLeft;
+			  ELSE
+			    nx_state <= SatetRight;
+			  END IF;
+	    END CASE;
+	  END PROCESS;
+	END ARCHITECTURE <arch_name>;

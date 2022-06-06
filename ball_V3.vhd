@@ -1,0 +1,79 @@
+------------ball_V3----------------
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.numeric_std.all;
+------------------------------------------------
+
+ENTITY ball_V3 IS 
+  PORT ( rst       : IN  STD_LOGIC;
+         clk       : IN  STD_LOGIC;
+			BallPos   : OUT UNSIGNED(7 DOWNTO 0));
+			
+			
+END ENTITY ball_V3;
+------------------------------------------------
+ARCHITECTURE my_arch OF ball_V3 IS 
+  TYPE state IS (zero, one, two);
+  
+  SIGNAL pr_state, nx_state : state;
+  SIGNAL max_tick_s         : STD_LOGIC;
+  SIGNAL BallPos_s          : UNSIGNED(7 DOWNTO 0);
+  
+  BEGIN 
+  
+    BallSpeed : ENTITY work.Univ_Bin_Counter_Ball
+                      PORT MAP( clk => clk,
+							           rst => rst,
+										  ena => '1',
+										  syn_clr => '0',
+										  load => '0',
+										  up => '1',
+										  d =>"00000000000000000000000000",
+										  max_tick => max_tick_s);
+										  
+	 BallPos <= BallPos_s;
+										  								  
+    ----------sequential section: -----------------
+	 PROCESS (rst, clk)
+	   BEGIN
+	     IF (rst = '1')THEN
+		    pr_state <= zero;
+		  ELSIF (rising_edge(clk))THEN 
+		    pr_state <= nx_state;
+			END IF;
+	  END PROCESS;
+	 ----------- combinational section: ------------
+	PROCESS (max_tick_s, pr_state)
+	  VARIABLE TempPos : UNSIGNED (7 DOWNTO 0) := (OTHERS => '0');
+     BEGIN 
+	    CASE pr_state IS 
+		   WHEN zero => 
+			  BallPos_s <= TempPos;
+		     IF ( max_tick_s = '1')THEN 
+				 nx_state <= one;
+			  ELSE
+			    nx_state <= zero;
+			  END IF;
+			  
+			WHEN one =>
+			  TempPos := TempPos + 8;
+			  BallPos_s <= TempPos;
+		     IF (max_tick_s = '1')THEN 
+				 nx_state <= two;
+			  ELSE
+			    nx_state <= one;
+			  END IF;
+			  
+			WHEN two =>
+			  TempPos := TempPos - 8;
+			  BallPos_s <= TempPos;
+		     IF (max_tick_s = '1')THEN 
+				 nx_state <= one;
+			  ELSE
+			    nx_state <= two;
+			  END IF;
+			  
+	    END CASE;
+	  END PROCESS;
+	END ARCHITECTURE;
